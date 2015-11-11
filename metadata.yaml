@@ -1,0 +1,11 @@
+name: openjdk
+summary: OpenJDK Java Environment
+maintainer: Kevin Monroe <kevin.monroe@canonical.com>
+description: |
+  This provides the OpenJDK Java Environment.
+tags: ['java']
+subordinate: true
+requires:
+  jre:
+    interface: java
+    scope: container
