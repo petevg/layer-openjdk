@@ -15,56 +15,85 @@ function update_java_home() {
     fi
 }
 
-@when 'jre.connected'
-@when_not 'jre.installed'
+@when 'java.connected'
+@when_not 'java.installed'
 function install() {
+    install_type=$(config-get 'install-type')
     java_major=$(config-get 'java-major')
-    status-set maintenance "Installing OpenJDK JRE $java_major"
+
+    # Install jre or jdk+jre depending on config. Since this is the first time
+    # we're installing (when_not java.installed), update-alternatives will be
+    # handled by the deb.
     apt-get update -q
-    apt-get install -qqy openjdk-${java_major}-jre-headless
+    status-set maintenance "Installing OpenJDK ${java_major} (${install_type})"
+    if [[ ${install_type} == "full" ]]; then
+      apt-get install -qqy openjdk-${java_major}-jre-headless openjdk-${java_major}-jdk
+    else
+      apt-get install -qqy openjdk-${java_major}-jre-headless
+    fi
     update_java_home
 
     # Send relation data
     java_home=$(readlink -f /usr/bin/java | sed "s:/bin/java::")
     java_version=$(java -version 2>&1 | head -1 | awk -F '"' {'print $2'})
-    relation_call --relation_name=jre set_ready $java_home $java_version
+    relation_call --relation_name=java set_ready $java_home $java_version
 
-    set_state 'jre.installed'
-    status-set active "OpenJDK JRE $java_major installed"
+    set_state 'java.installed'
+    status-set active "OpenJDK ${java_major} (${install_type}) installed"
 }
 
-@when 'jre.connected' 'jre.installed'
+@when 'java.connected' 'java.installed'
 function check_version() {
+    install_type=$(config-get 'install-type')
     java_major=$(config-get 'java-major')
     java_major_installed=$(java -version 2>&1 | head -1 | awk -F '.' {'print $2'})
 
     # Install new major version if the user has set 'java-major' to something
     # different than the version we have installed.
     if [[ $java_major != $java_major_installed ]]; then
-        status-set maintenance "Installing OpenJDK JRE $java_major"
+        status-set maintenance "Installing OpenJDK ${java_major} (${install_type})"
         apt-get update -q
-        apt-get install -qqy openjdk-${java_major}-jre-headless
-
-        # switch all java-related symlinks to the version we just installed,
-        # and update our environment with the new JAVA_HOME.
-        java_alternative=$(update-java-alternatives -l | grep java-1.${java_major} | awk {'print $1'})
-        update-java-alternatives -s ${java_alternative}
-        update_java_home
-
-        status-set active "OpenJDK JRE $java_major installed"
+        if [[ ${install_type} == "full" ]]; then
+          apt-get install -qqy openjdk-${java_major}-jre-headless openjdk-${java_major}-jdk
+        else
+          apt-get install -qqy openjdk-${java_major}-jre-headless
+        fi
+        status-set active "OpenJDK ${java_major} (${install_type}) installed"
+    elif [[ ${install_type} == 'jre' ]]; then
+      # Remove the JDK if config tells us we only want the JRE (it doesn't hurt
+      # to remove a package that is not installed).
+      status-set maintenance "Uninstalling OpenJDK ${java_major} (JDK)"
+      apt-get remove --purge -qqy openjdk-${java_major}-jdk
+    elif [[ ${install_type} == 'full' ]]; then
+      # Install the JDK if config tells us we want a full install (it doesn't
+      # hurt to install a package that is already installed. NOTE: this will
+      # update any existing jdk package to the latest point release).
+      status-set maintenance "Installing OpenJDK ${java_major} (${install_type})"
+      apt-get install -qqy openjdk-${java_major}-jdk
     fi
+
+    # Unconditionally switch all java-related symlinks to our major version.
+    # This doesn't hurt anything even if we didn't make any package changes.
+    # It helps ensure our system symlinks are always right, especially if we
+    # changed major version or install type.
+    java_alternative=$(update-java-alternatives -l | grep java-1.${java_major} | awk {'print $1'})
+    update-java-alternatives -s ${java_alternative}
+    update_java_home
+    status-set active "OpenJDK ${java_major} (${install_type}) installed"
 }
 
-@when 'jre.installed'
-@when_not 'jre.connected'
+@when 'java.installed'
+@when_not 'java.connected'
 function uninstall() {
-    status-set maintenance "Uninstalling OpenJDK JRE"
-    apt-get remove --purge -qqy "openjdk-[0-9]?-jre-headless"
+    # Uninstall all versions of OpenJDK
+    status-set maintenance "Uninstalling OpenJDK (all versions)"
+    apt-get remove --purge -qqy openjdk-[0-9]?-j.*
     update_java_home
 
-    # TODO: need to find a way to unset when jre relation is gone
-    #relation_call --relation_name=jre unset_ready
-    status-set blocked "OpenJDK JRE uninstalled"
+    # TODO: need to find a way to unset when java relation is gone?
+    #relation_call --relation_name=java unset_ready
+    remove_state 'java.installed'
+    status-set blocked "OpenJDK (all versions) uninstalled"
 }
 
 reactive_handler_main

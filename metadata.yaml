@@ -6,6 +6,6 @@ description: |
 tags: ['java']
 subordinate: true
 requires:
-  jre:
+  java:
     interface: java
     scope: container
