@@ -10,5 +10,5 @@ options:
   java-major:
     type: string
     default: "7"
-    description: | 
+    description: |
       Major version of Java. Defaults to 7.

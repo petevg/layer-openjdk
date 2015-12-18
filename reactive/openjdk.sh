@@ -1,8 +1,7 @@
 #!/bin/bash
-
 set -ex
 
-source $CHARM_DIR/bin/charms.reactive.sh
+source charms.reactive.sh
 
 # Remove any previous mention of JAVA_HOME, then append the appropriate value
 # based on the source of our /usr/bin/java symlink (if it exists).
@@ -35,8 +34,8 @@ function install() {
 
     # Send relation data
     java_home=$(readlink -f /usr/bin/java | sed "s:/bin/java::")
-    java_version=$(java -version 2>&1 | head -1 | awk -F '"' {'print $2'})
-    relation_call --relation_name=java set_ready $java_home $java_version
+    java_version=$(java -version 2>&1 | grep -i version | head -1 | awk -F '"' {'print $2'})
+    relation_call --state=java.connected set_ready $java_home $java_version
 
     set_state 'java.installed'
     status-set active "OpenJDK ${java_major} (${install_type}) installed"
@@ -46,7 +45,7 @@ function install() {
 function check_version() {
     install_type=$(config-get 'install-type')
     java_major=$(config-get 'java-major')
-    java_major_installed=$(java -version 2>&1 | head -1 | awk -F '.' {'print $2'})
+    java_major_installed=$(java -version 2>&1 | grep -i version | head -1 | awk -F '.' {'print $2'})
 
     # Install new major version if the user has set 'java-major' to something
     # different than the version we have installed.
@@ -90,8 +89,6 @@ function uninstall() {
     apt-get remove --purge -qqy openjdk-[0-9]?-j.*
     update_java_home
 
-    # TODO: need to find a way to unset when java relation is gone?
-    #relation_call --relation_name=java unset_ready
     remove_state 'java.installed'
     status-set blocked "OpenJDK (all versions) uninstalled"
 }
