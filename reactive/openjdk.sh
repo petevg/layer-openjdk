@@ -59,10 +59,11 @@ function check_version() {
         fi
         status-set active "OpenJDK ${java_major} (${install_type}) installed"
     elif [[ ${install_type} == 'jre' ]]; then
-      # Remove the JDK if config tells us we only want the JRE (it doesn't hurt
-      # to remove a package that is not installed).
-      status-set maintenance "Uninstalling OpenJDK ${java_major} (JDK)"
-      apt-get remove --purge -qqy openjdk-${java_major}-jdk
+      # Remove the JDK if it exists but config tells us we only want the JRE
+      if dpkg -s openjdk-${java_major}-jdk &> /dev/null; then
+        status-set maintenance "Uninstalling OpenJDK ${java_major} (JDK)"
+        apt-get remove --purge -qqy openjdk-${java_major}-jdk
+      fi
     elif [[ ${install_type} == 'full' ]]; then
       # Install the JDK if config tells us we want a full install (it doesn't
       # hurt to install a package that is already installed. NOTE: this will
