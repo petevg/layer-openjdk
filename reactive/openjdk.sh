@@ -58,6 +58,7 @@ function check_version() {
           apt-get install -qqy openjdk-${java_major}-jre-headless
         fi
         status-set active "OpenJDK ${java_major} (${install_type}) installed"
+        set_state 'java.updated'
     elif [[ ${install_type} == 'jre' ]]; then
       # Remove the JDK if it exists but config tells us we only want the JRE
       if dpkg -s openjdk-${java_major}-jdk &> /dev/null; then
