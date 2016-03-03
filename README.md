@@ -1,15 +1,14 @@
 # Overview
 
 This is a layered charm that generates a deployable OpenJDK charm. Source for
-this charm is available here:
-
-https://github.com/juju-solutions/layer-openjdk
+this charm is available on
+[github](https://github.com/juju-solutions/layer-openjdk).
 
 
 # Usage
 
-This subordinate charm supports the `java` interface and requires a principal
-charm that provides the `java` relation. Example deployment:
+This subordinate charm implements the `java` interface and requires a principal
+charm that provides the `java` relation endpoint. Example deployment:
 
     juju deploy cs:~kwmonroe/trusty/ubuntu-devenv
     juju deploy cs:~kwmonroe/trusty/openjdk
