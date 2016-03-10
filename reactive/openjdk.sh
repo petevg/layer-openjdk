@@ -1,6 +1,6 @@
 #!/bin/bash
 source charms.reactive.sh
-set -ex
+set -e
 
 # Update java-related system configuration and relation data. This function
 # must only be called from a 'java.connected' state handler.
@@ -11,6 +11,7 @@ function update_java_data() {
     local java_alternative=$(update-java-alternatives -l | grep java-1.${java_major} | awk {'print $1'})
 
     # Set our java symlinks to the alternative that matched our major version.
+    juju-log "openjdk: updating alternatives with ${java_alternative}"
     update-java-alternatives -s ${java_alternative}
 
     # Remove any previous mention of JAVA_HOME from /etc/environment.
@@ -33,26 +34,29 @@ function install() {
 
     # Install jre or jdk+jre depending on config.
     status-set maintenance "Installing OpenJDK ${java_major} (${install_type})"
-    apt-get update -q
-    if [[ ${install_type} == "full" ]]; then
-      apt-get install -qqy openjdk-${java_major}-jre-headless openjdk-${java_major}-jdk
-    else
+    juju-log "openjdk: installing openjdk ${java_major} (${install_type})"
+    apt-get update -qq
+    if [[ ${install_type} == "jre" ]]; then
       apt-get install -qqy openjdk-${java_major}-jre-headless
+    else
+      apt-get install -qqy openjdk-${java_major}-jre-headless openjdk-${java_major}-jdk
     fi
 
     # Register current java information
     update_java_data $java_major
     set_state 'java.installed'
     status-set active "OpenJDK ${java_major} (${install_type}) installed"
+    juju-log "openjdk: openjdk ${java_major} (${install_type}) installed"
 }
 
 @when 'java.connected' 'java.installed'
 @when 'config.changed.java-major'
 function change_major() {
-    # Different major java version requested by config, call install.
+    # Different major java version requested by config, call install().
     # NOTE: no need to check for an install-type change when java-major changes.
-    # The install function will use the current config value whether it
+    # The install() function will use the current config value whether it
     # changed since initial install or not.
+    juju-log "openjdk: java major version change requested"
     install
 }
 
@@ -63,7 +67,7 @@ function change_type() {
     # Different install-type (but same java-major) requested by config.
     # Update packages accordingly.
     # NOTE: if install-type AND java-major change, that is handled with a
-    # reinstall in the above change_major function.
+    # reinstall in the above change_major() function.
     local install_type=$(config-get 'install-type')
     local java_major=$(config-get 'java-major')
 
@@ -71,20 +75,23 @@ function change_type() {
       # Config tells us we only want the JRE. Remove the JDK if it exists.
       if dpkg -s openjdk-${java_major}-jdk &> /dev/null; then
         status-set maintenance "Uninstalling OpenJDK ${java_major} (JDK)"
+        juju-log "openjdk: java 'jre' requested; removing jdk if installed"
         apt-get remove --purge -qqy openjdk-${java_major}-jdk
       fi
-    elif [[ ${install_type} == 'full' ]]; then
-      # Config tells us we want a full install. Install the JDK unconditionally
+    else
+      # If we're not 'jre', do a full install. Install the JDK unconditionally
       # (it doesn't hurt to install a package that is already installed).
       # NOTE: this will update existing jdk packages to the latest rev of the
       # major release.
       status-set maintenance "Installing OpenJDK ${java_major} (${install_type})"
+      juju-log "openjdk: java 'full' requested; installing jdk"
       apt-get install -qqy openjdk-${java_major}-jdk
     fi
 
     # Register current java information
     update_java_data $java_major
     status-set active "OpenJDK ${java_major} (${install_type}) installed"
+    juju-log "openjdk: openjdk ${java_major} (${install_type}) installed"
 }
 
 @when 'java.installed'
@@ -92,10 +99,12 @@ function change_type() {
 function uninstall() {
     # Uninstall all versions of OpenJDK
     status-set maintenance "Uninstalling OpenJDK (all versions)"
+    juju-log "openjdk: uninstalling openjdk (all versions)"
     apt-get remove --purge -qqy openjdk-[0-9]?-j.*
 
     remove_state 'java.installed'
     status-set blocked "OpenJDK (all versions) uninstalled"
+    juju-log "openjdk: openjdk (all versions) have been uninstalled"
 }
 
 reactive_handler_main
