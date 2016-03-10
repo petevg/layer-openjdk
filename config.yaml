@@ -1,5 +1,5 @@
 options:
-  install-type:
+  java-type:
     type: string
     default: "jre"
     description: |

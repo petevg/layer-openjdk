@@ -10,14 +10,14 @@ this charm is available on
 This subordinate charm implements the `java` interface and requires a principal
 charm that provides the `java` relation endpoint. Example deployment:
 
-    juju deploy cs:~kwmonroe/trusty/ubuntu-devenv
-    juju deploy cs:~kwmonroe/trusty/openjdk
+    juju deploy ubuntu-devenv
+    juju deploy openjdk
     juju add-relation ubuntu-devenv openjdk
 
 
 # Configuration
 
-### install-type
+### java-type
 
   This determines which OpenJDK packages to install. Valid options are `jre`
   or `full`. The default is `jre`, which will install the OpenJDK Java Runtime
@@ -26,7 +26,7 @@ charm that provides the `java` relation endpoint. Example deployment:
 
   Switch between the JRE and full (JRE+JDK) with the following:
 
-      juju set openjdk install-type=full
+      juju set openjdk java-type=full
 
 
 ### java-major
