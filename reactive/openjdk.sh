@@ -32,6 +32,17 @@ function install() {
     local java_type=$(config-get 'java-type')
     local java_major=$(config-get 'java-major')
 
+    if grep -q trusty /etc/lsb-release; then
+        # ensure that Java 8 can be installed on trusty
+        add-apt-repository -y ppa:openjdk-r/ppa
+        apt-get update -qq
+    fi
+
+    if [[ `uname -p` == 'ppc64'* ]]; then
+        # openjdk-8 needs an arch option on ppc64le
+        echo 'JAVA_TOOL_OPTIONS="-Dos.arch=ppc64le"' >> /etc/environment
+    fi
+
     # Install jre or jdk+jre depending on config.
     status-set maintenance "Installing OpenJDK ${java_major} (${java_type})"
     juju-log "openjdk: installing openjdk ${java_major} (${java_type})"
