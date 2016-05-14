@@ -9,6 +9,6 @@ options:
       Kit (JDK) in addition to the JRE.
   java-major:
     type: string
-    default: "7"
+    default: "8"
     description: |
-      Major version of Java. Defaults to 7.
+      Major version of Java. Defaults to 8.
