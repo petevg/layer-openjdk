@@ -5,6 +5,9 @@ description: |
   This provides the OpenJDK Java Environment.
 tags: ['java']
 subordinate: true
+series:
+  - trusty
+  - xenial
 requires:
   java:
     interface: java
