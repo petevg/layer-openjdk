@@ -31,8 +31,9 @@ charm that provides the `java` relation endpoint. Example deployment:
 
 ### java-major
 
-  Major version of Java to install.  This defaults to `7` and installs
-  openjdk-7-[jre|jdk]. Valid options for Ubuntu 14.04 (Trusty) are `6` or `7`.
+  Major version of Java to install.  This defaults to `8` and installs
+  openjdk-8-[jre|jdk]. Valid options for Ubuntu 14.04 (Trusty) are `6`, `7`,
+  or `8`.
 
   Switch between Java7 and Java6 with the following:
 
