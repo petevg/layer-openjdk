@@ -20,9 +20,7 @@ function update_java_data() {
     # Update environment and relation if we have a /usr/bin/java symlink
     if [[ -L "/usr/bin/java" ]]; then
         local java_home=$(readlink -f /usr/bin/java | sed "s:/bin/java::")
-        local java_version=$(java -version 2>&1 | grep -i version | head -1 | awk -F '"' {'print $2'})
         echo "JAVA_HOME=${java_home}" >> /etc/environment
-        relation_call --state=java.connected set_ready $java_home $java_version
     fi
 }
 
@@ -58,6 +56,13 @@ function install() {
     set_state 'java.installed'
     status-set active "OpenJDK ${java_major} (${java_type}) installed"
     juju-log "openjdk: openjdk ${java_major} (${java_type}) installed"
+}
+
+@when 'java.connected' 'java.installed'
+function send_info() {
+    local java_home=$(readlink -f /usr/bin/java | sed "s:/bin/java::")
+    local java_version=$(java -version 2>&1 | grep -i version | head -1 | awk -F '"' {'print $2'})
+    relation_call --state=java.connected set_ready $java_home $java_version
 }
 
 @when 'java.connected' 'java.installed'
