@@ -23,7 +23,7 @@ class TestDeploy(unittest.TestCase):
         cls.unit = cls.d.sentry['ubuntu-devenv'][0]
 
     def test_java(self):
-        cmd = "java -version 2>&1"
+        cmd = "java -version 2>&1 | grep -i 'openjdk.*version'"
         print("running {}".format(cmd))
         output, rc = self.unit.run(cmd)
         print("output from cmd: {}".format(output))
