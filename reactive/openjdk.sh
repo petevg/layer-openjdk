@@ -51,6 +51,11 @@ function install() {
       apt-get install -qqy openjdk-${java_major}-jre-headless openjdk-${java_major}-jdk
     fi
 
+    # Force creation of java ca-certs, just in case postinst didn't work. It
+    # does not hurt to run the postinst multiple times.
+    # https://bugs.launchpad.net/ubuntu/+source/ca-certificates-java/+bug/1396760
+    /var/lib/dpkg/info/ca-certificates-java.postinst configure
+
     # Register current java information
     update_java_data $java_major
     set_state 'java.installed'
