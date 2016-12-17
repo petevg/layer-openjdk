@@ -6,8 +6,8 @@ description: |
 tags: ['java']
 subordinate: true
 series:
-  - trusty
   - xenial
+  - trusty
 requires:
   java:
     interface: java
