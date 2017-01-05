@@ -1,7 +1,7 @@
 # Overview
 
 This is a layered charm that generates a deployable OpenJDK charm. Source for
-this charm is available on
+this charm is available at
 [github](https://github.com/juju-solutions/layer-openjdk).
 
 
