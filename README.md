@@ -43,5 +43,3 @@ charm that provides the `java` relation endpoint. Example deployment:
 # Contact Information
 
 - <kevin.monroe@canonical.com>
-
-trigger webhook
