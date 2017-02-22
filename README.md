@@ -1,7 +1,3 @@
-Hooray config management camp!
-
-
-
 # Overview
 
 This is a layered charm that generates a deployable OpenJDK charm. Source for
